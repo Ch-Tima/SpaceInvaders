@@ -1,0 +1,6 @@
+﻿  Source.cpp
+E:\Tima\repos\C++\SpaceInvaders\SpaceInvaders\Source.cpp(99,8): warning C4566: символ, представленный универсальным именем символа "\u2206", невозможно представить в текущей кодовой странице (1251)
+E:\Tima\repos\C++\SpaceInvaders\SpaceInvaders\Source.cpp(99,23): warning C4566: символ, представленный универсальным именем символа "\u2206", невозможно представить в текущей кодовой странице (1251)
+E:\Tima\repos\C++\SpaceInvaders\SpaceInvaders\Source.cpp(692,66): warning C4805: !=: небезопасное смешение типа "int" и типа "bool" в операции
+E:\Tima\repos\C++\SpaceInvaders\SpaceInvaders\Source.cpp(852,12): warning C4244: аргумент: преобразование "time_t" в "unsigned int", возможна потеря данных
+  SpaceInvaders.vcxproj -> E:\Tima\repos\C++\SpaceInvaders\x64\Debug\SpaceInvaders.exe

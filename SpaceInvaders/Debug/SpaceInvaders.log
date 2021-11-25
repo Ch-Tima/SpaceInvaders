@@ -1,0 +1,14 @@
+﻿  Source.cpp
+C:\Users\chizh\Desktop\SpaceInvaders\SpaceInvaders\Source.cpp(99,8): warning C4566: символ, представленный универсальным именем символа "\u2206", невозможно представить в текущей кодовой странице (1251)
+C:\Users\chizh\Desktop\SpaceInvaders\SpaceInvaders\Source.cpp(99,23): warning C4566: символ, представленный универсальным именем символа "\u2206", невозможно представить в текущей кодовой странице (1251)
+C:\Users\chizh\Desktop\SpaceInvaders\SpaceInvaders\Source.cpp(490,25): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Users\chizh\Desktop\SpaceInvaders\SpaceInvaders\Source.cpp(519,25): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Users\chizh\Desktop\SpaceInvaders\SpaceInvaders\Source.cpp(616,24): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Users\chizh\Desktop\SpaceInvaders\SpaceInvaders\Source.cpp(678,24): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Users\chizh\Desktop\SpaceInvaders\SpaceInvaders\Source.cpp(692,66): warning C4805: !=: небезопасное смешение типа "int" и типа "bool" в операции
+C:\Users\chizh\Desktop\SpaceInvaders\SpaceInvaders\Source.cpp(694,25): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Users\chizh\Desktop\SpaceInvaders\SpaceInvaders\Source.cpp(707,24): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Users\chizh\Desktop\SpaceInvaders\SpaceInvaders\Source.cpp(723,25): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Users\chizh\Desktop\SpaceInvaders\SpaceInvaders\Source.cpp(852,12): warning C4244: аргумент: преобразование "time_t" в "unsigned int", возможна потеря данных
+C:\Users\chizh\Desktop\SpaceInvaders\SpaceInvaders\Source.cpp(1350,24): warning C4018: <: несоответствие типов со знаком и без знака
+  SpaceInvaders.vcxproj -> C:\Users\chizh\Desktop\SpaceInvaders\Debug\SpaceInvaders.exe
