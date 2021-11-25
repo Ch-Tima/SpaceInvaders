@@ -13,6 +13,10 @@
 
 #include <tchar.h> //Установка заголовка окна
 
+#include "Sprites.h"//тут хранятся изображения Invader и всякие надписи
+#include "BaseFunction.h"
+
+
 //пространство имен std
 using namespace std;
 
@@ -22,60 +26,15 @@ mutex mtx;//Для синхронизации потоков для совмес
 
 // enum - это спецификация списка имён, принадлежащих конкретному перечислению 
 enum Color { Black = 0, Blue, Green, Cyan, Red, Magenta, Brown, LightGray, DarkGray, LightBlue, LightGreen, LightCyan, LightRed, LightMagenta, Yellow, White };
-
 enum Napravlenie { Up = 72, Left = 75, Right = 77, Down = 80, Enter = 13, esc = 27, Space = 32, NumLock = 144 };
+
 HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);//получает дискриптор активного окна
 //HANDLE - С помощью дескприторов можно ссылаться на окна, объекты ядра, графические объекты
 
-//Установка цвета
-void SetColor(Color text, Color background)
-{
-	SetConsoleTextAttribute(hStdOut, (WORD)((background << 4) | text));
-}
-//Для установки курсора
-void SetCursor(short x, short y)
-{
-	COORD myCoords = { x,y };//инициализируем передаваемыми значениями объект координат
-	SetConsoleCursorPosition(hStdOut, myCoords);
-}
-//Для отключения консоли
-void Hidecursor(bool Cursor)
-{
-	HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-	CONSOLE_CURSOR_INFO info;
-	info.dwSize = 10;
-	info.bVisible = Cursor;
-	SetConsoleCursorInfo(consoleHandle, &info);
-}
-//Для устоновки размера шрифта
-//int FontSize размер шрифта
-void SetFontSize(int FontSize)
-{
-	CONSOLE_FONT_INFOEX info = { 0 };
-	info.cbSize = sizeof(info);
-	info.dwFontSize.Y = FontSize;
-	info.FontWeight = FW_NORMAL;
-	wcscpy_s(info.FaceName, L"Lucida Console");
+BaseFunction baseFunction(GetStdHandle(STD_OUTPUT_HANDLE));
 
-	SetCurrentConsoleFontEx(GetStdHandle(STD_OUTPUT_HANDLE), NULL, &info);
-}
-//Для отключения или включения выделения текста в консоле
-void HighlightingText(bool flags) {
-	DWORD prev_mode;
-	HANDLE hInput;
-	hInput = GetStdHandle(STD_INPUT_HANDLE);
-	GetConsoleMode(hInput, &prev_mode);
-	flags == true ? SetConsoleMode(hInput, ENABLE_EXTENDED_FLAGS | (prev_mode & ~ENABLE_QUICK_EDIT_MODE)) :
-		SetConsoleMode(hInput, ENABLE_QUICK_EDIT_MODE);
-}
-//Для воспроизведения звука
-//const wchar_t* nameMusic - передаем путь к файлу L"D://Music/file.wav"
-void Music(const wchar_t* nameMusic)
-{
-	//Если файл не может быть найден, функция воспроизводит звук по умолчанию
-	PlaySound(nameMusic, NULL, SND_FILENAME /*| SND_ASYNC*/);
-	//SND_ASYNC Звук воспроизводится асинхронно
-}
+
+
 
 struct User
 {
@@ -83,90 +42,168 @@ struct User
 	string Password;
 	int score = 0;
 };
-// struct Sprites тут хранятся изображения Invader и всякие надписи
-struct Sprites
-{
-	char InvadersTypeA[3][6] =
-	{
-			'.','.','.','.','.','.',
-			'.','{','@','@','}','.',
-			'.','/','"','"','\\','.'
-	};
-	char InvadersTypeB[3][6] =
-	{
-			'.','.','.','.','.','.',
-			'.','d','o','o','b','.',
-			'.','∆','/','\\','∆','.',
-	};
-
-	char InvadersTypeC[3][6] =
-	{
-		'.','.','.','.','.','.',
-		'.','/','M','M','\\','.',
-		'.','|','~','~','|','.'
-	};
-	char InvadersTypeG[3][8] =
-	{
-		'.','.','.','.','.','.','.','.',
-		'.','_','/','M','M','\\','_','.',
-		'.','q','w','A','A','w','p','.'
-	};
-
-	int GameOver[8][78] =
-	{
-0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,1,1,2,2,2,2,2,2,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,2,2,2,2,2,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,1,1,0,0,0,0,0,0,2,2,0,0,0,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,0,0,1,1,0,0,0,0,0,2,2,1,1,0,1,1,0,0,0,0,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,1,
-2,1,1,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,1,1,0,2,2,1,1,2,2,1,1,2,2,1,1,0,1,1,2,2,2,1,1,2,1,1,0,0,0,0,0,0,2,1,1,2,1,1,0,0,0,2,1,1,0,1,1,2,2,2,1,1,2,2,1,1,2,2,1,
-2,1,1,0,0,0,0,1,1,1,1,1,0,0,1,1,1,1,1,1,1,0,0,2,1,1,0,2,1,1,0,2,1,1,2,1,1,1,1,1,1,1,2,1,1,0,0,0,0,0,0,2,1,1,2,2,1,1,0,2,1,1,0,2,1,1,1,1,1,1,1,0,2,1,1,0,2,0,
-2,2,1,1,0,0,2,2,2,2,1,1,0,1,1,2,2,2,2,1,1,0,0,2,1,1,0,2,1,1,0,2,1,1,2,1,1,2,2,2,2,0,2,2,1,1,0,0,0,0,0,1,1,0,0,2,2,1,1,1,1,0,0,2,1,1,2,2,2,2,0,0,2,1,1,0,0,0,
-0,2,2,1,1,1,1,1,1,1,1,0,2,2,1,1,1,1,1,1,1,1,0,1,1,1,0,2,1,1,0,2,1,1,2,2,1,1,1,1,1,1,0,2,2,1,1,1,1,1,1,1,0,0,0,0,2,2,1,1,0,0,0,2,2,1,1,1,1,1,1,2,1,1,1,0,0,0,
-0,0,2,2,2,2,2,2,2,2,0,0,0,2,2,2,2,2,2,2,2,0,2,2,2,0,0,2,2,0,0,2,2,0,0,2,2,2,2,2,2,0,0,0,2,2,2,2,2,2,2,0,0,0,0,0,0,2,2,0,0,0,0,0,2,2,2,2,2,2,0,2,2,2,0,0,0,0
-	};
-
-	int YouWon[8][57] =
-	{
-0,1,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-2,2,1,1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,2,2,1,1,1,1,0,0,0,0,1,1,1,1,1,1,0,0,1,1,0,0,0,1,1,0,0,0,1,1,1,0,0,0,0,0,1,1,0,0,1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,0,
-0,0,2,2,1,1,0,0,0,0,1,1,2,2,2,2,1,1,2,1,1,0,0,2,1,1,0,0,2,2,1,1,0,0,1,0,2,1,1,0,1,1,2,2,2,2,1,1,2,2,1,1,2,2,2,1,1,
-0,0,0,2,1,1,0,0,0,2,1,1,0,0,0,2,1,1,2,1,1,0,0,2,1,1,0,0,0,2,1,1,0,1,1,1,2,1,1,2,1,1,0,0,0,2,1,1,0,2,1,1,0,0,2,1,1,
-0,0,0,2,1,1,0,0,0,2,1,1,0,0,0,2,1,1,2,1,1,0,0,2,1,1,0,0,0,2,1,1,1,1,2,1,1,1,1,2,1,1,0,0,0,2,1,1,0,2,1,1,0,0,2,1,1,
-0,0,0,2,1,1,0,0,0,2,2,1,1,1,1,1,1,0,2,2,1,1,1,1,1,1,0,0,0,1,1,1,2,0,2,2,2,1,1,2,2,1,1,1,1,1,1,0,0,1,1,1,0,0,2,1,1,
-0,0,0,2,2,0,0,0,0,0,2,2,2,2,2,2,0,0,0,2,2,2,2,2,2,0,0,0,2,2,2,0,0,0,0,2,2,2,0,0,2,2,2,2,2,2,0,0,2,2,2,0,0,0,2,2,0,
-	};
-
-	string NameGame[8] =
-	{
-	"  _____                            _____                         _                   \n",
-	" / ____|                          |_   _|                       | |                  \n",
-	"| (___   _ __    __ _   ___  ___    | |   _ __ __   __ __ _   __| |  ___  _ __  ___  \n",
-	" \\___ \\ | '_ \\  / _` | / __|/ _ \\   | |  | '_ \\\\ \\ / // _` | / _` | / _ \\| '__|/ __| \n",
-	" ____) || |_) || (_| || (__|  __/  _| |_ | | | |\\ V /| (_| || (_| ||  __/| |   \\__ \\ \n",
-	"|_____/ | .__/  \\__,_| \\___|\\___| |_____||_| |_| \\_/  \\__,_| \\__,_| \\___||_|   |___/ \n",
-	"        | |                                                                          \n",
-	"        |_|                                                                          \n"
-	};
-
-};
-// struct Shelter тут хранятся изображения убежища и параметры
-struct Shelter
-{
-	int x, y;//Координаты
-	//Размер убежища
-	static const int SizeX = 7;
-	static const int SizeY = 4;
-	//убежище
-	char shelter[SizeY][SizeX] =
-	{
-		'/','W','W','W','W','W','\\',
-		'W','W','W','W','W','W','W',
-		'W','W','.','.','.','W','W',
-		'W','W','.','.','.','W','W'
-	};
-};
 
 class LaserGun;
+
+class MysteryShip
+{
+	//Внешний вид корабля
+	char SpriteMysteryInvaders[3][8] =
+	{
+	'.','.','.','.','.','.','.','.',
+	'.','_','/','M','M','\\','_','.',
+	'.','q','w','A','A','w','p','.'
+	};
+	int Point;//Количество баллов за убийство
+	COORD CoordMysteryInvaders;//Координаты корабля
+	bool MoveLeft;
+	bool Active;
+	bool killed;
+public:
+	MysteryShip()
+	{
+		Point = 300;
+		CoordMysteryInvaders.X = 90;
+		CoordMysteryInvaders.Y = 4;
+		MoveLeft = true;
+		Active = false;
+		killed = false;
+	}
+	~MysteryShip() {}
+
+	void setKilled(bool killed) { this->killed = killed; }
+	//Отрисовка и движения корабля
+	void MovementMysteryShip()
+	{
+		Sleep(rand() % 4500);
+		Active = true;
+		int i = 0;
+		if (MoveLeft == true)
+		{
+
+			do
+			{
+				if (i < 4)
+				{
+					thread music(&BaseFunction::Music, &baseFunction, ref(L"Music/ufo_lowpitch.wav"));
+					music.detach();
+					++i;
+				}
+				for (short i = 0; i < 3; i++)
+				{
+					for (short j = 0; j < 8; j++)
+					{
+						mtx.lock();
+						if (SpriteMysteryInvaders[i][j] == '.')
+							baseFunction.SetColor(Black, Black);
+						else
+							baseFunction.SetColor(Red, Black);
+						baseFunction.SetCursor(CoordMysteryInvaders.X + j, CoordMysteryInvaders.Y + i);
+						cout << SpriteMysteryInvaders[i][j];
+						mtx.unlock();
+					}
+				}
+				Sleep(85);
+				--CoordMysteryInvaders.X;
+			} while (CoordMysteryInvaders.X > -1 && killed != true);
+			if (CoordMysteryInvaders.X <= 0)
+			{
+				for (short i = 0; i < 3; i++)
+				{
+					for (short j = 0; j < 8; j++)
+					{
+						mtx.lock();
+						baseFunction.SetColor(Black, Black);
+						baseFunction.SetCursor(CoordMysteryInvaders.X + j, CoordMysteryInvaders.Y + i);
+						cout << "x";
+						mtx.unlock();
+					}
+				}
+				MoveLeft = false;
+			}
+
+		}
+		else
+		{
+			do
+			{
+				if (i < 4)
+				{
+					thread music(&BaseFunction::Music, &baseFunction, ref(L"Music/ufo_lowpitch.wav"));
+					music.detach();
+					++i;
+				}
+				for (short i = 0; i < 3; i++)
+				{
+					for (short j = 0; j < 8; j++)
+					{
+						mtx.lock();
+						if (SpriteMysteryInvaders[i][j] == '.')
+							baseFunction.SetColor(Black, Black);
+						else
+							baseFunction.SetColor(Red, Black);
+						baseFunction.SetCursor(CoordMysteryInvaders.X + j, CoordMysteryInvaders.Y + i);
+						cout << SpriteMysteryInvaders[i][j];
+						mtx.unlock();
+					}
+				}
+				Sleep(85);
+				++CoordMysteryInvaders.X;
+
+			} while (CoordMysteryInvaders.X < 91 && killed != true);
+			if (CoordMysteryInvaders.X >= 90)
+			{
+				for (short i = 0; i < 3; i++)
+				{
+					for (short j = 0; j < 8; j++)
+					{
+						mtx.lock();
+						baseFunction.SetColor(Black, Black);
+						baseFunction.SetCursor(CoordMysteryInvaders.X + j, CoordMysteryInvaders.Y + i);
+						cout << "x";
+						mtx.unlock();
+					}
+				}
+				MoveLeft = true;
+			}
+
+		}
+
+		if (killed == true)
+		{
+			for (short i = 0; i < 3; i++)
+			{
+				for (short j = 0; j < 8; j++)
+				{
+					mtx.lock();
+					baseFunction.SetColor(Black, Black);
+					baseFunction.SetCursor(CoordMysteryInvaders.X + j, CoordMysteryInvaders.Y + i);
+					cout << "x";
+					mtx.unlock();
+				}
+			}
+			if (MoveLeft == true)
+			{
+				CoordMysteryInvaders.X = 0;
+				MoveLeft = false;
+			}
+			else
+			{
+				CoordMysteryInvaders.X = 90;
+				MoveLeft = true;
+			}
+			killed = false;
+		}
+
+		Active = false;
+	}
+	//Возврат количество баллов
+	int getPoint() { return Point; }
+	//Возврат информации, о активности корабля
+	bool getActive() { return Active; }
+	//Возврат координат корабля
+	COORD getCoord() { return CoordMysteryInvaders; }
+};
 
 class Invaders
 {
@@ -223,8 +260,8 @@ public:
 			for (short j = 0; j < 6; j++)
 			{
 				mtx.lock();
-				SetCursor(Black, Black);
-				SetCursor(coordInvader.X + j, coordInvader.Y + i);
+				baseFunction.SetCursor(Black, Black);
+				baseFunction.SetCursor(coordInvader.X + j, coordInvader.Y + i);
 				cout << " ";
 				mtx.unlock();
 			}
@@ -244,8 +281,8 @@ public:
 			for (short j = 0; j < 6; j++)
 			{
 				mtx.lock();
-				SetCursor(coordInvader.X + j, coordInvader.Y + i);
-				Invader[i][j] == '.' ? SetColor(Black, Black) : SetColor(White, Black);
+				baseFunction.SetCursor(coordInvader.X + j, coordInvader.Y + i);
+				Invader[i][j] == '.' ? baseFunction.SetColor(Black, Black) : baseFunction.SetColor(White, Black);
 				cout << Invader[i][j];
 				mtx.unlock();
 			}
@@ -256,165 +293,7 @@ public:
 	//Возврат координат
 	COORD getCoord() { return coordInvader; }
 };
-class MysteryShip
-{
-	//Внешний вид корабля
-	char SpriteMysteryInvaders[3][8] =
-	{
-	'.','.','.','.','.','.','.','.',
-	'.','_','/','M','M','\\','_','.',
-	'.','q','w','A','A','w','p','.'
-	};
-	int Point;//Количество баллов за убийство
-	COORD CoordMysteryInvaders;//Координаты корабля
-	bool MoveLeft;
-	bool Active;
-	bool killed;
-public:
-	MysteryShip()
-	{
-		Point = 300;
-		CoordMysteryInvaders.X = 90;
-		CoordMysteryInvaders.Y = 4;
-		MoveLeft = true;
-		Active = false;
-		killed = false;
-	}
-	~MysteryShip() {}
 
-	void setKilled(bool killed) { this->killed = killed; }
-	//Отрисовка и движения корабля
-	void MovementMysteryShip()
-	{
-		Sleep(rand() % 4500);
-		Active = true;
-		int i = 0;
-		if (MoveLeft == true)
-		{
-
-			do
-			{
-				if (i < 4)
-				{
-					thread music(Music, L"Music/ufo_lowpitch.wav");
-					music.detach();
-					++i;
-				}
-				for (short i = 0; i < 3; i++)
-				{
-					for (short j = 0; j < 8; j++)
-					{
-						mtx.lock();
-						if (SpriteMysteryInvaders[i][j] == '.')
-							SetColor(Black, Black);
-						else
-							SetColor(Red, Black);
-						SetCursor(CoordMysteryInvaders.X + j, CoordMysteryInvaders.Y + i);
-						cout << SpriteMysteryInvaders[i][j];
-						mtx.unlock();
-					}
-				}
-				Sleep(85);
-				--CoordMysteryInvaders.X;
-			} while (CoordMysteryInvaders.X > -1 && killed != true);
-			if (CoordMysteryInvaders.X <= 0)
-			{
-				for (short i = 0; i < 3; i++)
-				{
-					for (short j = 0; j < 8; j++)
-					{
-						mtx.lock();
-						SetColor(Black, Black);
-						SetCursor(CoordMysteryInvaders.X + j, CoordMysteryInvaders.Y + i);
-						cout << "x";
-						mtx.unlock();
-					}
-				}
-				MoveLeft = false;
-			}
-
-		}
-		else
-		{
-			do
-			{
-				if (i < 4)
-				{
-					thread music(Music, L"Music/ufo_lowpitch.wav");
-					music.detach();
-					++i;
-				}
-				for (short i = 0; i < 3; i++)
-				{
-					for (short j = 0; j < 8; j++)
-					{
-						mtx.lock();
-						if (SpriteMysteryInvaders[i][j] == '.')
-							SetColor(Black, Black);
-						else
-							SetColor(Red, Black);
-						SetCursor(CoordMysteryInvaders.X + j, CoordMysteryInvaders.Y + i);
-						cout << SpriteMysteryInvaders[i][j];
-						mtx.unlock();
-					}
-				}
-				Sleep(85);
-				++CoordMysteryInvaders.X;
-
-			} while (CoordMysteryInvaders.X < 91 && killed != true);
-			if (CoordMysteryInvaders.X >= 90)
-			{
-				for (short i = 0; i < 3; i++)
-				{
-					for (short j = 0; j < 8; j++)
-					{
-						mtx.lock();
-						SetColor(Black, Black);
-						SetCursor(CoordMysteryInvaders.X + j, CoordMysteryInvaders.Y + i);
-						cout << "x";
-						mtx.unlock();
-					}
-				}
-				MoveLeft = true;
-			}
-
-		}
-
-		if (killed == true)
-		{
-			for (short i = 0; i < 3; i++)
-			{
-				for (short j = 0; j < 8; j++)
-				{
-					mtx.lock();
-					SetColor(Black, Black);
-					SetCursor(CoordMysteryInvaders.X + j, CoordMysteryInvaders.Y + i);
-					cout << "x";
-					mtx.unlock();
-				}
-			}
-			if (MoveLeft == true)
-			{
-				CoordMysteryInvaders.X = 0;
-				MoveLeft = false;
-			}
-			else
-			{
-				CoordMysteryInvaders.X = 90;
-				MoveLeft = true;
-			}
-			killed = false;
-		}
-
-		Active = false;
-	}
-	//Возврат количество баллов
-	int getPoint() { return Point; }
-	//Возврат информации, о активности корабля
-	bool getActive() { return Active; }
-	//Возврат координат корабля
-	COORD getCoord() { return CoordMysteryInvaders; }
-};
 class LaserGun
 {
 	int lives;//количество жизни игрока
@@ -470,11 +349,11 @@ public:
 		{
 			mtx.lock();//mtx.lock() приостанавливает все другие потоки пока не исполнится вель код до mtx.unlock();
 			//Отрисовка пули
-			SetColor(White, Black);//Установка цвета текста и заднего фона
-			SetCursor(Bullet.X, --Bullet.Y);//Установка курсора
+			baseFunction.SetColor(White, Black);//Установка цвета текста и заднего фона
+			baseFunction.SetCursor(Bullet.X, --Bullet.Y);//Установка курсора
 			cout << "";
 			//Стерам пулю
-			SetCursor(Bullet.X, ++Bullet.Y);
+			baseFunction.SetCursor(Bullet.X, ++Bullet.Y);
 			cout << " ";
 			mtx.unlock();//Если не использовать mtx.lock(); и mtx.unlock(); то пуля может нарисовать не в том месте где надо
 
@@ -521,7 +400,7 @@ public:
 					if (invad[i].getCoord().X + 1 <= Bullet.X && invad[i].getCoord().X + 4 >= Bullet.X && invad[i].getCoord().Y <= Bullet.Y && invad[i].getCoord().Y + 2 >= Bullet.Y)
 					{
 						//Включаем звук смерти Invaders
-						thread music(Music, L"Music/invader_killed.wav");
+						thread music(&BaseFunction::Music, &baseFunction, ref(L"Music/invader_killed.wav"));
 						score += invad[i].getPoint();//добавляем игроку баллы
 						invad[i].Clear();//Стерам захватчика
 						invad.erase(invad.begin() + i);//Удаляем его из максима invad
@@ -536,8 +415,8 @@ public:
 			Sleep(40);
 		} while (obj != true);
 		mtx.lock();//Затерам пулю
-		SetColor(Black, Black);
-		SetCursor(Bullet.X, Bullet.Y);
+		baseFunction.SetColor(Black, Black);
+		baseFunction.SetCursor(Bullet.X, Bullet.Y);
 		cout << "x";
 		mtx.unlock();
 		++NumberShots;//подсчет количества выстрелов, каждые 14 выстрелов появляется MysteryShip
@@ -553,20 +432,20 @@ public:
 				mtx.lock();
 				if (j == 0 || j == 6)
 				{
-					SetCursor(Gun.X + j, Gun.Y + i);
-					SetColor(Black, Black);
+					baseFunction.SetCursor(Gun.X + j, Gun.Y + i);
+					baseFunction.SetColor(Black, Black);
 					cout << "D";
 				}
 				else if (i == 0 && j != 3)
 				{
-					SetCursor(Gun.X + j, Gun.Y + i);
-					SetColor(Black, Black);
+					baseFunction.SetCursor(Gun.X + j, Gun.Y + i);
+					baseFunction.SetColor(Black, Black);
 					cout << "D";
 				}
 				else
 				{
-					SetCursor(Gun.X + j, Gun.Y + i);
-					SetColor(Green, Green);
+					baseFunction.SetCursor(Gun.X + j, Gun.Y + i);
+					baseFunction.SetColor(Green, Green);
 					cout << "D";
 				}
 				mtx.unlock();
@@ -597,11 +476,11 @@ void Invaders::Shoot(LaserGun& CoordPlayer, vector<Shelter>& shelter)
 	do
 	{	//Отрисовка пули
 		mtx.lock();
-		SetColor(White, Black);
-		SetCursor(Bullet.X, ++Bullet.Y);
+		baseFunction.SetColor(White, Black);
+		baseFunction.SetCursor(Bullet.X, ++Bullet.Y);
 		cout << "*";
-		SetColor(Black, Black);
-		SetCursor(Bullet.X, --Bullet.Y);
+		baseFunction.SetColor(Black, Black);
+		baseFunction.SetCursor(Bullet.X, --Bullet.Y);
 		cout << " ";
 		++Bullet.Y;
 		mtx.unlock();
@@ -635,8 +514,8 @@ void Invaders::Shoot(LaserGun& CoordPlayer, vector<Shelter>& shelter)
 	} while (obj != true);
 
 	mtx.lock();//Затерам пулю
-	SetColor(Black, Black);
-	SetCursor(Bullet.X, Bullet.Y);
+	baseFunction.SetColor(Black, Black);
+	baseFunction.SetCursor(Bullet.X, Bullet.Y);
 	cout << "x";
 	mtx.unlock();
 
@@ -740,25 +619,25 @@ void InvaderBehavior(LaserGun& LG, vector<Invaders>& invad, vector<Shelter>& she
 		//Изменения звука и скорости 
 		if (DescentInvaders < 4)
 		{
-			thread music(Music, L"Music/fastinvader1.wav");
+			thread music(&BaseFunction::Music, &baseFunction, ref(L"Music/fastinvader1.wav"));
 			Sleep(700);
 			music.detach();
 		}
 		else if (DescentInvaders >= 4 && DescentInvaders <= 8)
 		{
-			thread music(Music, L"Music/fastinvader2.wav");
+			thread music(&BaseFunction::Music, &baseFunction, ref(L"Music/fastinvader2.wav"));
 			Sleep(550);
 			music.detach();
 		}
 		else if (DescentInvaders >= 9 && DescentInvaders <= 12)
 		{
-			thread music(Music, L"Music/fastinvader3.wav");
+			thread music(&BaseFunction::Music, &baseFunction, ref(L"Music/fastinvader3.wav"));
 			Sleep(250);
 			music.detach();
 		}
 		else
 		{
-			thread music(Music, L"Music/fastinvader4.wav");
+			thread music(&BaseFunction::Music, &baseFunction, ref(L"Music/fastinvader4.wav"));
 			Sleep(75);
 			music.detach();
 		}
@@ -788,8 +667,8 @@ void DrawObjShelter(vector<Shelter>& shelter, bool& GameEnd)
 			for (short j = 0; j < shelter[k].SizeX; j++)
 			{
 				mtx.lock();
-				shelter[k].shelter[i][j] == '.' ? SetColor(Black, Black) : SetColor(Green, Black);
-				SetCursor(shelter[k].x + j, shelter[k].y + i);
+				shelter[k].shelter[i][j] == '.' ? baseFunction.SetColor(Black, Black) : baseFunction.SetColor(Green, Black);
+				baseFunction.SetCursor(shelter[k].x + j, shelter[k].y + i);
 				cout << shelter[k].shelter[i][j];
 				mtx.unlock();
 			}
@@ -815,14 +694,14 @@ void Menu(string* MenuItem, short y, short x, short num, short coordYInHeight = 
 	{
 		if (y == i)
 		{
-			SetColor(Red, Black);
-			SetCursor(x, i + coordYInHeight);
+			baseFunction.SetColor(Red, Black);
+			baseFunction.SetCursor(x, i + coordYInHeight);
 			cout << ">" << MenuItem[i] << "<\n";
 		}
 		else
 		{
-			SetColor(White, Black);
-			SetCursor(x, i + coordYInHeight);
+			baseFunction.SetColor(White, Black);
+			baseFunction.SetCursor(x, i + coordYInHeight);
 			cout << " " << MenuItem[i] << " \n";
 		}
 	}
@@ -834,10 +713,10 @@ void DrawPlayerStats(LaserGun& LG)
 	do
 	{
 		mtx.lock();
-		SetColor(White, Black);
-		SetCursor(20, 2);
+		baseFunction.SetColor(White, Black);
+		baseFunction.SetCursor(20, 2);
 		cout << "SCORE:" << LG.getScore();
-		SetCursor(65, 2);
+		baseFunction.SetCursor(65, 2);
 		cout << "HP:" << LG.getLives();
 		mtx.unlock();
 		Sleep(250);
@@ -850,11 +729,11 @@ int main()
 	SetConsoleOutputCP(1251);
 
 	srand(time(NULL));
-	Hidecursor(FALSE);//Отключения курсора в консоли
+	baseFunction.Hidecursor(FALSE);//Отключения курсора в консоли
 
 	SetConsoleTitle(_T("Space Invaders"));//Установка заголовка окна
 
-	SetFontSize(16);//установка размера шрифта
+	baseFunction.SetFontSize(16);//установка размера шрифта
 	system("mode con cols=78 lines=32");//Установка размера окна
 
 	int key;//для хранения ID клавиш
@@ -902,23 +781,23 @@ int main()
 			}
 		} while (key != Enter);
 		system("cls");
-		SetColor(White, Black);
+		baseFunction.SetColor(White, Black);
 		//Авторизацию
 		if (y == 0)
 		{
-			Hidecursor(TRUE);
+			baseFunction.Hidecursor(TRUE);
 			do
 			{
 				reader.open("Users.txt");//открытия файла на чтения
 				string login;
 				string pas;
 				//Ввод логина и пароля
-				SetCursor(x, 10);
+				baseFunction.SetCursor(x, 10);
 				cout << "Авторизация\n";
-				SetCursor(x, 11);
+				baseFunction.SetCursor(x, 11);
 				cout << "LOGIN: ";
 				getline(cin, login);
-				SetCursor(x, 12);
+				baseFunction.SetCursor(x, 12);
 				cout << "PASSWORD: ";
 				getline(cin, pas);
 
@@ -950,19 +829,19 @@ int main()
 		//Регистрация
 		if (y == 1)
 		{
-			Hidecursor(TRUE);
+			baseFunction.Hidecursor(TRUE);
 			bool test = false, SuccesRegis = false;//Successful registration
 			while (SuccesRegis == false)
 			{
 				string login;
 				string password;
 				//Ввод логина и пароля
-				SetCursor(x, 10);
+				baseFunction.SetCursor(x, 10);
 				cout << "Регистрация\n";
-				SetCursor(x, 11);
+				baseFunction.SetCursor(x, 11);
 				cout << "LOGIN: ";
 				getline(cin, login);
-				SetCursor(x, 12);
+				baseFunction.SetCursor(x, 12);
 				cout << "PASSWORD: ";
 				getline(cin, password);
 				reader.open("Users.txt");
@@ -1006,21 +885,21 @@ int main()
 		{
 			return dot1.score < dot2.score;
 		});
-	Hidecursor(FALSE);//Отключения курсора в консоли
+	baseFunction.Hidecursor(FALSE);//Отключения курсора в консоли
 
 	//Основной цикл игры
 	while (successfully == true)
 	{
-		SetFontSize(16);
+		baseFunction.SetFontSize(16);
 		system("mode con cols=78 lines=32");//Установка размера консоли
 
 		system("cls");//Очистка консоли
 
 		//Меню//
-		SetColor(White, Black);
+		baseFunction.SetColor(White, Black);
 		for (short i = 0; i < 8; i++)
 		{
-			SetCursor(0, 2 + i);
+			baseFunction.SetCursor(0, 2 + i);
 			cout << DrawSprites.NameGame[i];
 		}
 
@@ -1054,10 +933,10 @@ int main()
 			case 0:
 			{
 				system("cls");
-				SetColor(White, Black);
+				baseFunction.SetColor(White, Black);
 				for (short i = 0; i < 8; i++)
 				{
-					SetCursor(0, 2 + i);
+					baseFunction.SetCursor(0, 2 + i);
 					cout << DrawSprites.NameGame[i];
 				}
 				for (short k = 0; k < 3; k++)
@@ -1066,46 +945,46 @@ int main()
 					{
 						for (short j = 0; j < 6; j++)
 						{
-							SetCursor(j + 25, 15 + i + 4 * k);
+							baseFunction.SetCursor(j + 25, 15 + i + 4 * k);
 							if (k == 0)
 							{
 								if (DrawSprites.InvadersTypeA[i][j] == '.')
-									SetColor(Black, Black);
+									baseFunction.SetColor(Black, Black);
 								else
-									SetColor(White, Black);
+									baseFunction.SetColor(White, Black);
 								cout << DrawSprites.InvadersTypeA[i][j];
 								if (i == 1)
 								{
-									SetColor(White, Black);
-									SetCursor(j + 26, 15 + i + 4 * k);
+									baseFunction.SetColor(White, Black);
+									baseFunction.SetCursor(j + 26, 15 + i + 4 * k);
 									cout << " = 30 Point";
 								}
 							}
 							if (k == 1)
 							{
 								if (DrawSprites.InvadersTypeB[i][j] == '.')
-									SetColor(Black, Black);
+									baseFunction.SetColor(Black, Black);
 								else
-									SetColor(White, Black);
+									baseFunction.SetColor(White, Black);
 								cout << DrawSprites.InvadersTypeB[i][j];
 								if (i == 1)
 								{
-									SetColor(White, Black);
-									SetCursor(j + 26, 15 + i + 4 * k);
+									baseFunction.SetColor(White, Black);
+									baseFunction.SetCursor(j + 26, 15 + i + 4 * k);
 									cout << " = 20 Point";
 								}
 							}
 							if (k == 2)
 							{
 								if (DrawSprites.InvadersTypeC[i][j] == '.')
-									SetColor(Black, Black);
+									baseFunction.SetColor(Black, Black);
 								else
-									SetColor(White, Black);
+									baseFunction.SetColor(White, Black);
 								cout << DrawSprites.InvadersTypeC[i][j];
 								if (i == 1)
 								{
-									SetColor(White, Black);
-									SetCursor(j + 26, 15 + i + 4 * k);
+									baseFunction.SetColor(White, Black);
+									baseFunction.SetCursor(j + 26, 15 + i + 4 * k);
 									cout << " = 10 Point";
 								}
 							}
@@ -1113,8 +992,8 @@ int main()
 					}
 				}
 
-				SetColor(Red, Black);
-				SetCursor(30, 12);
+				baseFunction.SetColor(Red, Black);
+				baseFunction.SetCursor(30, 12);
 				cout << "START";
 
 				key = _getch();
@@ -1130,16 +1009,16 @@ int main()
 			}
 			case 1:
 				system("cls");
-				SetCursor(25, 4);
+				baseFunction.SetCursor(25, 4);
 				cout << "Name:\t\t" << "Score:\n";
 				while (key != esc)
 				{
 					int i = 0;
 					for (User val : US)
 					{
-						SetCursor(23, 5 + i);
+						baseFunction.SetCursor(23, 5 + i);
 						cout << i << ") " << val.Login;
-						SetCursor(40, 5 + i);
+						baseFunction.SetCursor(40, 5 + i);
 						cout << val.score << "\n";
 						i++;
 					}
@@ -1166,7 +1045,7 @@ int main()
 			GameEnd = false;
 			system("cls");
 
-			SetFontSize(13);
+			baseFunction.SetFontSize(13);
 			Sleep(1);
 			system("mode con cols=97 lines=39");
 
@@ -1179,10 +1058,10 @@ int main()
 			bool СollisionObj = true;
 
 			//Отрисовка нижней границы//
-			SetColor(Red, Green);
+			baseFunction.SetColor(Red, Green);
 			for (short i = 0; i < 97; i++)
 			{
-				SetCursor(0 + i, 38);
+				baseFunction.SetCursor(0 + i, 38);
 				cout << "#";
 			}
 
@@ -1267,7 +1146,7 @@ int main()
 					{
 						СollisionObj = false;
 						//Создания потока с звуком выстрела
-						thread music(Music, L"Music/shoot.wav");
+						thread music(&BaseFunction::Music, &baseFunction, ref(L"Music/shoot.wav"));
 						//Создания потока с функцией Shoot для выстрела 
 						thread shoot(&LaserGun::Shoot, &LG, ref(Invad), ref(shelter), ref(СollisionObj), ref(MysteryShip));
 						Sleep(50);
@@ -1287,7 +1166,7 @@ int main()
 			GameEnd = true;
 			LG.setEndGame(true);
 
-			thread music(Music, L"Music/explosion.wav");
+			thread music(&BaseFunction::Music, &baseFunction, ref(L"Music/explosion.wav"));
 
 			InvadersThread.detach();
 			DrawObjShelters.detach();
@@ -1295,7 +1174,7 @@ int main()
 
 			music.detach();
 
-			SetColor(White, Black);
+			baseFunction.SetColor(White, Black);
 
 
 
@@ -1306,13 +1185,13 @@ int main()
 				{
 					for (int j = 0; j < 78; j++)
 					{
-						SetCursor(10 + j, 5 + i);
+						baseFunction.SetCursor(10 + j, 5 + i);
 						if (DrawSprites.GameOver[i][j] == 0)
-							SetColor(Black, Black);
+							baseFunction.SetColor(Black, Black);
 						if (DrawSprites.GameOver[i][j] == 1)
-							SetColor(LightRed, LightRed);
+							baseFunction.SetColor(LightRed, LightRed);
 						if (DrawSprites.GameOver[i][j] == 2)
-							SetColor(Red, Red);
+							baseFunction.SetColor(Red, Red);
 						cout << DrawSprites.GameOver[i][j];
 
 					}
@@ -1326,13 +1205,13 @@ int main()
 				{
 					for (int j = 0; j < 57; j++)
 					{
-						SetCursor(20 + j, 5 + i);
+						baseFunction.SetCursor(20 + j, 5 + i);
 						if (DrawSprites.YouWon[i][j] == 0)
-							SetColor(Black, Black);
+							baseFunction.SetColor(Black, Black);
 						if (DrawSprites.YouWon[i][j] == 1)
-							SetColor(LightRed, LightRed);
+							baseFunction.SetColor(LightRed, LightRed);
 						if (DrawSprites.YouWon[i][j] == 2)
-							SetColor(Red, Red);
+							baseFunction.SetColor(Red, Red);
 						cout << DrawSprites.YouWon[i][j];
 
 					}
@@ -1392,11 +1271,6 @@ int main()
 		} while (true);
 
 	}
-
-
-
-
-
 	//exit(0);
-	Hidecursor(TRUE);
+	baseFunction.Hidecursor(TRUE);
 }

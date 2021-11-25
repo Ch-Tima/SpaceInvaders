@@ -8,4 +8,4 @@ ArtyomArt 3e1ePgh 0
 dima f23 0
 Google GOOGLE.COM 0
 Log 1234 0
-G 1234 0
+G 1234 50
